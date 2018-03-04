@@ -1,39 +1,61 @@
 # frozen_string_literal: true
 
-require 'feedjira'
+require 'feed-normalizer'
+require 'open-uri'
 
 require_relative 'model/site'
 require_relative 'model/entry'
 
+# needed for anti-bot protected sites
+HTTP_OPTIONS = {
+  'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; WOW64) ' \
+  'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36'
+}.freeze
+
 Plugin.create :rss do
   on_rss_fetch do
-    Thread.new do
-      UserConfig[:rss_sources].each_with_index do |url, i|
-        begin
-          notice "processing RSS source #{i}"
+    UserConfig[:rss_sources].each_with_index do |url, i|
+      Thread.new do
+        notice "processing RSS source #{i}"
 
-          feed = Feedjira::Feed.fetch_and_parse url
-          site = Plugin::RSS::Site.new title: feed.title, perma_link: feed.url
-          entries = feed.entries.map do |entry|
-            Plugin::RSS::Entry.new(
-              site: site,
-              title: entry.title,
-              author: entry.author,
-              content: entry.content,
-              created: entry.updated,
-              perma_link: entry.links.first
-            )
-          end
+        feed = FeedNormalizer::FeedNormalizer.parse open(url, HTTP_OPTIONS)
+        feed.clean!
 
-          notice "got #{entries.length} entries"
+        site = get_site feed
+        entries = feed.entries.map { |entry| get_entry site, entry }
 
-          Plugin.call :extract_receive_message, "rss-#{i}".to_sym, entries
-          Plugin.call :extract_receive_message, :rss, entries
-        rescue => e
-          puts e.to_s
-          puts e.backtrace
-        end
+        notice "got #{entries.length} entries"
+
+        Plugin.call :extract_receive_message, "rss-#{i}".to_sym, entries
+        Plugin.call :extract_receive_message, :rss, entries
       end
     end
+  end
+
+  def get_site(feed)
+    Plugin::RSS::Site.new(
+      title: feed.title,
+      perma_link: URI.parse(feed.url),
+      # image: feed.image
+    )
+  end
+
+  def get_entry(site, entry)
+    created = if entry.date_published.is_a? Time
+                entry.date_published
+              elsif entry.last_updated.is_a? Time
+                entry.last_updated
+              else
+                Time.now
+              end
+
+    Plugin::RSS::Entry.new(
+      site: site,
+      title: entry.title,
+      author: entry.authors.first,
+      content: entry.content,
+      created: created,
+      perma_link: URI.parse(entry.urls.first)
+    )
   end
 end

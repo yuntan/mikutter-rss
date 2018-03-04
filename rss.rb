@@ -21,8 +21,11 @@ Plugin.create :rss do
     filter_extract_datasources do |dss|
       dss = dss.merge rss: 'All of received RSS entries'
       UserConfig[:rss_sources].each_with_index do |url, i|
+        # replace / with other char
+        url_escaped = url.gsub %r{/}, '-'
         dss = dss.merge(
-          "rss-#{i}".to_sym => "RSS/RSS entries from source #{i + 1} (#{url})"
+          "rss-#{i}".to_sym => "RSS/RSS entries from source #{i + 1}" \
+          " (#{url_escaped})"
         )
       end
       [dss]

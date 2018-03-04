@@ -19,7 +19,7 @@ class Plugin
       field.string :content, required: true
       field.time   :created, required: true
       # should be implemented for message model
-      field.string :perma_link, required: true
+      field.uri :perma_link, required: true
 
       entity_class Plugin::RSS::AnchorLinkEntity
 
@@ -30,8 +30,19 @@ class Plugin
 
       # should be implemented for message model
       def description
-        "#{title}\n\n#{dehtmlize content}"
+        @description ||= begin
+          s = "#{dehtmlize(title).strip}\n\n#{dehtmlize(content).strip}"
+          s[0, UserConfig[:rss_strip_content_length]] + '…'
+        end
       end
+
+      # for mikutter-subparts_image plugin
+      # def subparts_images
+      #   return @_subparts_images if @_subparts_images
+      #
+      #   doc = Nokogiri::HTML html
+      #   @_subparts_images = doc.search('img').map { |img| img['src'] }
+      # end
 
       # * replace <a> tags with plain text
       # * remove HTML tags
@@ -74,12 +85,6 @@ class Plugin
 
       def dehtmlize_reloaded(html)
         # TODO: rewrite with HTML to markdown converter
-      end
-
-      # find <img> from HTML and return as an photo model
-      def find_img(html)
-        # TODO
-        html
       end
     end
   end

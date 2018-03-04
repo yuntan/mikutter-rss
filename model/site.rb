@@ -10,7 +10,7 @@ class Plugin
       register :rss_site, name: 'RSS site'
 
       field.string :title, required: true
-      field.string :perma_link
+      field.uri :perma_link
       # field.string :profile_image_url
 
       # should be implemented for user model

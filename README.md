@@ -15,7 +15,8 @@ git clone https://github.com/yuntan/mikutter-rss.git ~/.mikutter/plugin/rss
 - 投稿内容の表示文字数を制限
 
 ## できないこと・既知の不具合
-- ウェブサイトのアイコンをアバターとして表示する
+- ウェブサイトのアイコンをアバターとして表示できない
+- 投稿日時を適切に設定できない，そのためにタイムラインでの並び順が時系列でない
 - 投稿内容を途中で切ったときにタグが壊れる
 - リンクがついたりつかなかったりする
 - [mikutter-subparts-image](https://github.com/moguno/mikutter-subparts-image)に微妙に対応できてない

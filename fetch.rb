@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# for `Time.rfc2822` and `Time.parse`
+require 'time'
 require 'feed-normalizer'
 require 'open-uri'
 
@@ -41,21 +43,33 @@ Plugin.create :rss do
   end
 
   def get_entry(site, entry)
-    created = if entry.date_published.is_a? Time
-                entry.date_published
-              elsif entry.last_updated.is_a? Time
-                entry.last_updated
-              else
-                Time.now
-              end
-
     Plugin::RSS::Entry.new(
       site: site,
       title: entry.title,
       author: entry.authors.first,
       content: entry.content,
-      created: created,
+      created: get_created(entry),
       perma_link: URI.parse(entry.urls.first)
     )
+  end
+
+  def get_created(entry)
+    if !entry.date_published.nil?
+      date = entry.date_published
+    elsif !entry.last_updated.nil?
+      date = entry.last_updated
+    else
+      return Time.now
+    end
+
+    return date if date.is_a? Time
+
+    begin
+      Time.rfc2822(date)
+    rescue ArgumentError
+      Time.parse(date)
+    rescue ArgumentError
+      Time.now
+    end
   end
 end

@@ -62,12 +62,12 @@ Plugin.create :rss do
       return Time.now
     end
 
-    return date if date.is_a? Time
+    return date.localtime if date.is_a? Time
 
     begin
-      Time.rfc2822(date)
+      Time.rfc2822(date).localtime
     rescue ArgumentError
-      Time.parse(date)
+      Time.parse(date).localtime
     rescue ArgumentError
       Time.now
     end

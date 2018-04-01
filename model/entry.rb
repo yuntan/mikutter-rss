@@ -3,7 +3,6 @@
 require 'nokogiri'
 
 require_relative 'site'
-require_relative '../entity/anchor_link_entity'
 
 class Plugin
   module RSS
@@ -21,7 +20,7 @@ class Plugin
       # should be implemented for message model
       field.uri :perma_link, required: true
 
-      entity_class Plugin::RSS::AnchorLinkEntity
+      entity_class Diva::Entity::URLEntity
 
       # should be implemented for message model
       def user
@@ -30,10 +29,8 @@ class Plugin
 
       # should be implemented for message model
       def description
-        @description ||= begin
-          s = "#{dehtmlize(title).strip}\n\n#{dehtmlize(content).strip}"
-          s[0, UserConfig[:rss_strip_content_length]] + '…'
-        end
+        @description ||=
+          "#{dehtmlize title} #{get_image_urls(content).join(' ')}".strip
       end
 
       # for mikutter-subparts_image plugin
@@ -49,42 +46,15 @@ class Plugin
       def dehtmlize(html)
         doc = Nokogiri::HTML html
 
-        # replace <br> with new line
-        # https://stackoverflow.com/a/10174385/2707413
-        doc.search('br').each { |br| br.replace "\n" }
-
-        doc.search('img').each do |img|
-          a = "<a href=\"#{img['src']}\">🖼️</a>"
-          if img.parent.name == 'a'
-            img.parent.replace a
-          else
-            img.replace a
-          end
-        end
-
-        # escape <a> for AnchorLinkEntity
-        doc.search('a').each do |a|
-          if a.text.strip.empty?
-            a.replace ''
-          else
-            a.replace Nokogiri::XML::Text.new(
-              "<a href=\"#{a['href']}\">#{a.text.strip}</a>", doc
-            )
-          end
-        end
-
-        # replace <code> with `` (markdown line syntax)
+        # replace <code> with `` (markdown like syntax)
         doc.search('code').each { |code| code.replace "`#{code.text}`" }
 
-        # insert new lines
-        doc.search('p').each { |p| p.replace "\n#{p.text}\n" }
-        doc.text
-           .gsub(/\n+/, "\n") # remove duplicated new lines
-           .gsub(/^\n/, '')
+        doc.text.delete("\n").strip
       end
 
-      def dehtmlize_reloaded(html)
-        # TODO: rewrite with HTML to markdown converter
+      def get_image_urls(html)
+        doc = Nokogiri::HTML html
+        doc.search('img').map { |img| img['src'] }
       end
     end
   end

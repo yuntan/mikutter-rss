@@ -12,18 +12,14 @@ git clone https://github.com/yuntan/mikutter-rss.git ~/.mikutter/plugin/rss
 
 ## できること
 - 一定時間毎に投稿を取得
-- 投稿内容の表示文字数を制限
+- 投稿内容に画像が含まれる場合は画像のURLを抽出する（[mikutter-subparts-image](https://github.com/moguno/mikutter-subparts-image)対応）
 
 ## できないこと・既知の不具合
 - ウェブサイトのアイコンをアバターとして表示できない
-- 投稿日時を適切に設定できない，そのためにタイムラインでの並び順が時系列でない
-- 投稿内容を途中で切ったときにタグが壊れる
-- リンクがついたりつかなかったりする
-- [mikutter-subparts-image](https://github.com/moguno/mikutter-subparts-image)に微妙に対応できてない
 
 ## LICENSE
-多分MIT
+MIT
 
 ## SCREENSHOTS
-[![https://gyazo.com/5ead8cbbdbde563bcaecda7b566b4d05](https://i.gyazo.com/5ead8cbbdbde563bcaecda7b566b4d05.png)](https://gyazo.com/5ead8cbbdbde563bcaecda7b566b4d05)
+[![https://gyazo.com/c856a93892cd8f6e732d12a12d2d6410](https://i.gyazo.com/c856a93892cd8f6e732d12a12d2d6410.png)](https://gyazo.com/c856a93892cd8f6e732d12a12d2d6410)
 [![https://gyazo.com/0b7eb19f440d3b92b02ff0b5bfae1783](https://i.gyazo.com/0b7eb19f440d3b92b02ff0b5bfae1783.png)](https://gyazo.com/0b7eb19f440d3b92b02ff0b5bfae1783)

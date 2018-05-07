@@ -22,6 +22,12 @@ class Plugin
 
       entity_class Diva::Entity::URLEntity
 
+      def icon
+        # TODO use favicon
+        # site.icon
+        ::Skin['rss.png']
+      end
+
       # should be implemented for message model
       def user
         site

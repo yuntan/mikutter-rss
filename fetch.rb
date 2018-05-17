@@ -21,12 +21,17 @@ Plugin.create :rss do
         notice "processing RSS source #{i}"
 
         feed = FeedNormalizer::FeedNormalizer.parse open(url, HTTP_OPTIONS)
-        feed.clean!
+
+        begin
+          feed.clean!
+        rescue ArgumentError # fix for GitHub issue #1
+          warn $!
+        end
 
         site = get_site feed
         entries = feed.entries.map { |entry| get_entry site, entry }
 
-        notice "got #{entries.length} entries"
+        notice "got #{entries.length} entries for source #{i}"
 
         Plugin.call :extract_receive_message, "rss-#{i}".to_sym, entries
         Plugin.call :extract_receive_message, :rss, entries

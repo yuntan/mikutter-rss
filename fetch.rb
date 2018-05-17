@@ -17,7 +17,7 @@ HTTP_OPTIONS = {
 Plugin.create :rss do
   on_rss_fetch do
     UserConfig[:rss_sources].each_with_index do |url, i|
-      Thread.new do
+      SerialThread.new do
         notice "processing RSS source #{i}"
 
         feed = FeedNormalizer::FeedNormalizer.parse open(url, HTTP_OPTIONS)

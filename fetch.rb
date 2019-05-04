@@ -20,6 +20,7 @@ Plugin.create :rss do
 
         begin
           source = open(url, HTTP_OPTIONS)
+        # fix for https://github.com/yuntan/mikutter-rss/issues/2
         rescue OpenURI::HTTPError, Errno::ECONNRESET => err
           error "Failed to open #{url}"
           error "#{err.class}: #{err.message}"
@@ -68,12 +69,12 @@ Plugin.create :rss do
     when RSS::Rss
       Plugin::RSS::Site.new(
         title: item.channel.title,
-        perma_link: URI.parse(item.channel.link),
+        perma_link: parse_url(item.channel.link),
       )
     when RSS::Atom::Feed
       Plugin::RSS::Site.new(
         title: item.title.content,
-        perma_link: URI.parse(item.link.href),
+        perma_link: parse_url(item.link.href),
       )
     end
   end
@@ -87,9 +88,9 @@ Plugin.create :rss do
         title: entry.title,
         created: pub_date || Time.now,
         modified: pub_date || Time.now,
-        perma_link: URI.parse(entry.link),
+        perma_link: parse_url(entry.link),
       ).tap do |e|
-        e[:subparts_images] = [URI.parse(entry.enclosure.url)] if entry.enclosure
+        e[:subparts_images] = [parse_url(entry.enclosure.url)] if entry.enclosure
       end
     when RSS::Atom::Feed::Entry
       published = entry.published&.content&.localtime
@@ -99,12 +100,18 @@ Plugin.create :rss do
         title: entry.title.content,
         created: published || updated || Time.now,
         modified: updated || published || Time.now,
-        perma_link: URI.parse(entry.link.href),
+        perma_link: parse_url(entry.link.href),
       ).tap do |e|
         content = entry.content&.content
         e[:subparts_images] = get_image_urls content if content
       end
     end
+  end
+
+  def parse_url(s)
+    # 非ASCII文字を含むURLを扱えるようにする
+    # fix for https://github.com/yuntan/mikutter-rss/issues/3
+    URI.parse URI.encode s
   end
 
   def get_image_urls(html)

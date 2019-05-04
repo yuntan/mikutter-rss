@@ -20,15 +20,22 @@ Plugin.create :rss do
 
         begin
           source = open(url, HTTP_OPTIONS)
-        rescue OpenURI::HTTPError
-          warn "Failed to open #{url}"
+        rescue OpenURI::HTTPError, Errno::ECONNRESET => err
+          error "Failed to open #{url}"
+          error "#{err.class}: #{err.message}"
+          next
+        rescue => err
+          error "Unknown error for #{url}"
+          error "#{err.class}: #{err.message}"
+          error err
           next
         end
 
         item = begin
                  RSS::Parser.parse source
-               rescue RSS::InvalidRSSError
-                 warn "Invalid source. Parse without validation."
+               rescue RSS::InvalidRSSError => err
+                 error "Invalid source. Parse without validation."
+                 error "#{err.class}: #{err.message}"
                  RSS::Parser.parse source, false # parse without validation
                end
 
@@ -40,8 +47,8 @@ Plugin.create :rss do
           notice "RSS source #{i} is RSS 0.9x/2.0"
         when RSS::Atom::Feed
           notice "RSS source #{i} is Atom"
-        else
-          warn "Invalid source. skipping."
+        when nil
+          error "Invalid source. skipping."
           next
         end
 
